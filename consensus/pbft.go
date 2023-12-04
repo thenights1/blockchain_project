@@ -1,8 +1,8 @@
 package consensus
 
 import (
-	. "blockchain/data"
-	. "blockchain/network"
+	. "../data"
+	. "../network"
 	"fmt"
 	"sync"
 	"time"

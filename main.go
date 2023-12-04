@@ -1,6 +1,8 @@
 package blockchain
 
 import (
+	"blockchain/consensus"
+	"blockchain/network"
 	"fmt"
 )
 
