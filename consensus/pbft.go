@@ -1,11 +1,14 @@
+// consensus/pbft.go
+
 package consensus
 
 import (
-	. "../data"
-	. "../network"
 	"fmt"
 	"sync"
 	"time"
+
+	. "blockchain/data"
+	. "blockchain/network"
 )
 
 // PBFT 实现了 PBFT 共识算法
@@ -15,6 +18,7 @@ type PBFT struct {
 	prepareChan     chan *Block
 	commitChan      chan *Block
 	committedBlocks map[int]*Block
+	view            int
 	mutex           sync.Mutex
 }
 
@@ -33,10 +37,6 @@ func NewPBFT(nodes ...*Node) *PBFT {
 func (p *PBFT) StartConsensus() {
 	fmt.Println("PBFT consensus started")
 
-	// Implement PBFT consensus initialization
-	// ...
-
-	// Simulate some consensus steps
 	go p.prePrepare()
 	go p.prepare()
 	go p.commit()
@@ -115,4 +115,68 @@ func (p *PBFT) broadcastCommit(block *Block) {
 	}
 }
 
-// 其他 PBFT 相关方法和结构体可以在这里添加
+// 主节点提出新区块的函数
+func (p *PBFT) proposeNewBlock() {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 生成新的区块，将其广播到网络上
+	// 此处需要注意轮换主节点的机制
+}
+
+// 提交交易到共识过程
+func (p *PBFT) SubmitTransaction(transaction *Transaction) {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 将交易加入待处理池，并触发共识过程
+}
+
+// 主节点轮换机制
+func (p *PBFT) rotatePrimary() {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 根据轮换算法选择下一个主节点
+}
+
+// 外部接口，模拟客户端向节点提交交易
+func (p *PBFT) ClientSubmitTransaction(transaction *Transaction) {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 客户端将交易提交到某个节点
+	node := p.nodes[0] // 简单示例，选择第一个节点
+	node.ReceiveTransaction(transaction)
+}
+
+// ReceiveTransaction 接收来自网络的交易
+func (p *PBFT) ReceiveTransaction(transaction *Transaction) {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 节点接收到来自网络的交易，并加入待处理池
+	// 触发共识过程
+	p.SubmitTransaction(transaction)
+}
+
+// ReceivePrepare 接收来自网络的准备消息
+func (p *PBFT) ReceivePrepare(block *Block) {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 节点接收到来自网络的准备消息，并进行相应处理
+}
+
+// ReceiveCommit 接收来自网络的提交消息
+func (p *PBFT) ReceiveCommit(block *Block) {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 节点接收到来自网络的提交消息，并进行相应处理
+}
+
+// 外部接口，模拟客户端查询区块信息
+func (p *PBFT) ClientQueryBlock(blockNumber int) *Block {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 客户端查询指定区块信息
+	// 可以选择任意一个节点进行查询
+	node := p.nodes[0] // 简单示例，选择第一个节点
+	return node.QueryBlock(blockNumber)
+}
+
+// QueryBlock 查询区块信息
+func (p *PBFT) QueryBlock(blockNumber int) *Block {
+	// 此处省略具体逻辑，可根据具体需求实现
+	// 节点查询指定区块信息
+	// 可以从已经提交的区块中查找
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	return p.committedBlocks[blockNumber]
+}
