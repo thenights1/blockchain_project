@@ -18,7 +18,6 @@ func GenerateKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return priv, &priv.PublicKey, nil
 }
 
