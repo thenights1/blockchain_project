@@ -3,8 +3,8 @@
 package data
 
 import (
+	"blockchain/crypto"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -17,17 +17,19 @@ type Transaction struct {
 	ID              string    // 交易ID
 	SenderAddress   string    // 发送者地址
 	ReceiverAddress string    // 接收者地址
-	Amount          float64   // 交易手续费
+	Amount          float64   // 交易金额
 	Timestamp       time.Time // 时间戳
 	Signature       string    // 数字签名
+	Premium         float64   //交易手续费
 }
 
 // NewTransaction 创建一个新的交易
-func NewTransaction(sender string, receiver string, amount float64, privateKey *ecdsa.PrivateKey) (*Transaction, error) {
+func NewTransaction(sender string, receiver string, amount float64, premium float64, privateKey *ecdsa.PrivateKey) (*Transaction, error) {
 	transaction := &Transaction{
 		SenderAddress:   sender,
 		ReceiverAddress: receiver,
 		Amount:          amount,
+		Premium:         premium,
 		Timestamp:       time.Now(),
 	}
 
@@ -53,23 +55,24 @@ func (t *Transaction) generateID() {
 
 // 对交易进行签名
 func (t *Transaction) sign(privateKey *ecdsa.PrivateKey) error {
-	data := fmt.Sprintf("%s%s%s%f", t.SenderAddress, t.ReceiverAddress, t.Timestamp.String(), t.Amount)
+	data := fmt.Sprintf("%s%s%s%f%s", t.SenderAddress, t.ReceiverAddress, t.Timestamp.String(), t.Amount, t.ID)
 
 	hash := sha256.New()
 	hash.Write([]byte(data))
 
-	signature, err := ecdsa.SignASN1(rand.Reader, privateKey, hash.Sum(nil))
+	signature, err := crypto.Sign(privateKey, hash.Sum(nil))
+	signature1 := []byte(signature)
 	if err != nil {
 		return err
 	}
 
-	t.Signature = base64.URLEncoding.EncodeToString(signature)
+	t.Signature = base64.URLEncoding.EncodeToString(signature1)
 	return nil
 }
 
 // VerifySignature 验证交易的签名
 func (t *Transaction) VerifySignature(publicKey *ecdsa.PublicKey) bool {
-	data := fmt.Sprintf("%s%s%s%f", t.SenderAddress, t.ReceiverAddress, t.Timestamp.String(), t.Amount)
+	data := fmt.Sprintf("%s%s%s%f%s", t.SenderAddress, t.ReceiverAddress, t.Timestamp.String(), t.Amount, t.ID)
 
 	hash := sha256.New()
 	hash.Write([]byte(data))
@@ -78,8 +81,10 @@ func (t *Transaction) VerifySignature(publicKey *ecdsa.PublicKey) bool {
 	if err != nil {
 		return false
 	}
-
-	return ecdsa.VerifyASN1(publicKey, hash.Sum(nil), signature)
+	sign := ""
+	sign = string(signature)
+	valid, err := crypto.Verify(publicKey, hash.Sum(nil), sign)
+	return valid
 }
 
 // ToJSON 将交易转换为JSON格式的字符串

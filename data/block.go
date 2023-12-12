@@ -3,7 +3,6 @@
 package data
 
 import (
-	. "../network"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"

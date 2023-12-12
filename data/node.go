@@ -1,10 +1,8 @@
 // network/node.go
 
-package network
+package data
 
 import (
-	. "blockchain/consensus"
-	. "blockchain/data"
 	"fmt"
 	"sync"
 	"time"
@@ -21,6 +19,7 @@ type Node struct {
 	mutex           sync.Mutex    //用于在多协程中保护数据一致性的互斥锁
 	Synchronized    bool          //用于判断节点是否与其他节点同步
 	stopChan        chan struct{} //用于通知节点停止的通道
+	Addr            string
 }
 
 // NewNode 创建一个新的节点实例

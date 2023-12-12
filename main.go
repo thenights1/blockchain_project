@@ -1,15 +1,14 @@
 package blockchain
 
 import (
-	"blockchain/consensus"
-	"blockchain/network"
+	"blockchain/data"
 	"fmt"
 )
 
 func main() {
 	// 初始化节点
-	nodeA := network.NewNode("NodeA")
-	nodeB := network.NewNode("NodeB")
+	nodeA := data.NewNode("NodeA")
+	nodeB := data.NewNode("NodeB")
 	// ...
 
 	// 启动节点
@@ -18,7 +17,7 @@ func main() {
 	// ...
 
 	// 初始化共识
-	pbft := consensus.NewPBFT(nodeA, nodeB /* add other nodes */)
+	pbft := data.NewPBFT(nodeA, nodeB /* add other nodes */)
 
 	// 启动共识
 	pbft.StartConsensus()

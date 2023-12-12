@@ -3,7 +3,6 @@
 package data
 
 import (
-	. "../network"
 	"sync"
 )
 
@@ -20,7 +19,6 @@ type Blockchain struct {
 func NewBlockchain() *Blockchain {
 	genesisBlock := &Block{
 		BlockNumber: 0,
-		Data:        "Genesis Block",
 		Proposer:    nil,
 	}
 	return &Blockchain{
@@ -37,7 +35,6 @@ func (bc *Blockchain) AddBlock(data string, proposer *Node) {
 
 	block := &Block{
 		BlockNumber: bc.height,
-		Data:        data,
 		Proposer:    proposer,
 	}
 

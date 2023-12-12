@@ -1,14 +1,11 @@
 // consensus/pbft.go
 
-package consensus
+package data
 
 import (
 	"fmt"
 	"sync"
 	"time"
-
-	. "blockchain/data"
-	. "blockchain/network"
 )
 
 // PBFT 实现了 PBFT 共识算法
@@ -96,7 +93,7 @@ func (p *PBFT) broadcastPrepare(block *Block) {
 			go func(n *Node) {
 				// Simulate network delay
 				time.Sleep(time.Millisecond * 100)
-				n.ReceivePrepare(block)
+				//n.ReceivePrepare(block)
 			}(node)
 		}
 	}
@@ -109,7 +106,7 @@ func (p *PBFT) broadcastCommit(block *Block) {
 			go func(n *Node) {
 				// Simulate network delay
 				time.Sleep(time.Millisecond * 100)
-				n.ReceiveCommit(block)
+				//n.ReceiveCommit(block)
 			}(node)
 		}
 	}
@@ -138,8 +135,8 @@ func (p *PBFT) rotatePrimary() {
 func (p *PBFT) ClientSubmitTransaction(transaction *Transaction) {
 	// 此处省略具体逻辑，可根据具体需求实现
 	// 客户端将交易提交到某个节点
-	node := p.nodes[0] // 简单示例，选择第一个节点
-	node.ReceiveTransaction(transaction)
+	//node := p.nodes[0] // 简单示例，选择第一个节点
+	//node.ReceiveTransaction(transaction)
 }
 
 // ReceiveTransaction 接收来自网络的交易
@@ -163,13 +160,13 @@ func (p *PBFT) ReceiveCommit(block *Block) {
 }
 
 // 外部接口，模拟客户端查询区块信息
-func (p *PBFT) ClientQueryBlock(blockNumber int) *Block {
-	// 此处省略具体逻辑，可根据具体需求实现
-	// 客户端查询指定区块信息
-	// 可以选择任意一个节点进行查询
-	node := p.nodes[0] // 简单示例，选择第一个节点
-	return node.QueryBlock(blockNumber)
-}
+//func (p *PBFT) ClientQueryBlock(blockNumber int) *Block {
+//	// 此处省略具体逻辑，可根据具体需求实现
+//	// 客户端查询指定区块信息
+//	// 可以选择任意一个节点进行查询
+//	node := p.nodes[0] // 简单示例，选择第一个节点
+//	return node.QueryBlock(blockNumber)
+//}
 
 // QueryBlock 查询区块信息
 func (p *PBFT) QueryBlock(blockNumber int) *Block {
