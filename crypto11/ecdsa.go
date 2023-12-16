@@ -1,6 +1,6 @@
-// crypto/ecdsa.go
+// crypto11/ecdsa.go
 
-package crypto
+package crypto11
 
 import (
 	"crypto/ecdsa"

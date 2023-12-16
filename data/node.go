@@ -3,6 +3,8 @@
 package data
 
 import (
+	"blockchain/crypto11"
+	"crypto/ecdsa"
 	"fmt"
 	"sync"
 	"time"
@@ -10,33 +12,43 @@ import (
 
 // Node 节点的数据结构
 type Node struct {
-	ID              string        //node的唯一标识符
-	TransactionPool []string      //存储待处理交易的池。
-	Blockchain      *Blockchain   //表示节点拥有的区块链
-	PublicKey       string        //存储公钥
-	PrivateKey      string        //存储私钥
-	Consensus       *PBFT         //表示节点使用的共识机制，这里是PBFT。
-	mutex           sync.Mutex    //用于在多协程中保护数据一致性的互斥锁
-	Synchronized    bool          //用于判断节点是否与其他节点同步
-	stopChan        chan struct{} //用于通知节点停止的通道
+	ID              string            //node的唯一标识符
+	TransactionPool []Transaction     //存储待处理交易的池。
+	Blockchain      *Blockchain       //表示节点拥有的区块链
+	PublicKey       *ecdsa.PublicKey  //存储公钥
+	PrivateKey      *ecdsa.PrivateKey //存储私钥
+	Consensus       *PBFT             //表示节点使用的共识机制，这里是PBFT。
+	mutex           sync.Mutex        //用于在多协程中保护数据一致性的互斥锁
+	Synchronized    bool              //用于判断节点是否与其他节点同步
+	stopChan        chan struct{}     //用于通知节点停止的通道
 	Addr            string
 }
 
 // NewNode 创建一个新的节点实例
-func NewNode(id string) *Node {
-	return &Node{
+func NewNode(addr string, id string) *Node {
+
+	privateKey, publicKey, err := crypto11.GenerateKeyPair()
+	if err != nil {
+		fmt.Printf("Error generating key pair: %v", err)
+	}
+	node := &Node{
 		ID:              id,
-		TransactionPool: make([]string, 0),
+		TransactionPool: make([]Transaction, 0),
 		Blockchain:      NewBlockchain(),
 		Consensus:       NewPBFT(),
 		stopChan:        make(chan struct{}),
+		Synchronized:    false,
+		Addr:            addr,
+		PrivateKey:      privateKey,
+		PublicKey:       publicKey,
 	}
+
+	return node
 }
 
 // Start 启动节点
 func (n *Node) Start() {
 	fmt.Printf("Node %s started\n", n.ID)
-
 	for {
 		select {
 		case <-n.stopChan:
@@ -55,8 +67,10 @@ func (n *Node) Stop() {
 }
 
 // AddTransaction 添加新交易到待处理池
-func (n *Node) AddTransaction(transaction string) {
+func (n *Node) AddTransaction(transaction Transaction) {
+	// 使用互斥锁，确保在多线程环境下的安全并发操作
 	n.mutex.Lock()
+	// 函数结束后解锁
 	defer n.mutex.Unlock()
 
 	fmt.Printf("Node %s added transaction: %s\n", n.ID, transaction)

@@ -28,12 +28,12 @@ func NewBlock(blockNumber int, transactions []*Transaction, prevHash string, pro
 		PrevHash:     prevHash,
 		Proposer:     proposer,
 	}
-	block.Hash = block.calculateHash()
+	block.Hash = block.CalculateHash()
 	return block
 }
 
 // calculateHash 计算区块的哈希值
-func (b *Block) calculateHash() string {
+func (b *Block) CalculateHash() string {
 	data := fmt.Sprintf("%d%s%s%s%s", b.BlockNumber, b.Transactions, b.Timestamp, b.PrevHash, b.Proposer)
 	hashInBytes := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hashInBytes[:])

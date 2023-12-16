@@ -3,11 +3,10 @@
 package data
 
 import (
-	"blockchain/crypto"
+	"blockchain/crypto11"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -60,7 +59,7 @@ func (t *Transaction) sign(privateKey *ecdsa.PrivateKey) error {
 	hash := sha256.New()
 	hash.Write([]byte(data))
 
-	signature, err := crypto.Sign(privateKey, hash.Sum(nil))
+	signature, err := crypto11.Sign(privateKey, hash.Sum(nil))
 	signature1 := []byte(signature)
 	if err != nil {
 		return err
@@ -83,24 +82,24 @@ func (t *Transaction) VerifySignature(publicKey *ecdsa.PublicKey) bool {
 	}
 	sign := ""
 	sign = string(signature)
-	valid, err := crypto.Verify(publicKey, hash.Sum(nil), sign)
+	valid, err := crypto11.Verify(publicKey, hash.Sum(nil), sign)
 	return valid
 }
 
-// ToJSON 将交易转换为JSON格式的字符串
-func (t *Transaction) ToJSON() (string, error) {
-	jsonData, err := json.Marshal(t)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonData), nil
-}
-
-// FromJSON 从JSON格式的字符串恢复交易
-func (t *Transaction) FromJSON(jsonData string) error {
-	err := json.Unmarshal([]byte(jsonData), &t)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+//// ToJSON 将交易转换为JSON格式的字符串
+//func (t *Transaction) ToJSON() (string, error) {
+//	jsonData, err := json.Marshal(t)
+//	if err != nil {
+//		return "", err
+//	}
+//	return string(jsonData), nil
+//}
+//
+//// FromJSON 从JSON格式的字符串恢复交易
+//func (t *Transaction) FromJSON(jsonData string) error {
+//	err := json.Unmarshal([]byte(jsonData), &t)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}

@@ -1,13 +1,13 @@
-package test // crypto/ecdsa_test.go
+package test // crypto11/ecdsa_test.go
 
 import (
-	"blockchain/crypto"
+	"blockchain/crypto11"
 	"fmt"
 	"testing"
 )
 
 func TestGenerateKeyPair(t *testing.T) {
-	privKey, pubKey, err := crypto.GenerateKeyPair()
+	privKey, pubKey, err := crypto11.GenerateKeyPair()
 	if err != nil {
 		t.Errorf("Error generating key pair: %v", err)
 	}
@@ -20,7 +20,7 @@ func TestGenerateKeyPair(t *testing.T) {
 }
 
 func TestSignAndVerify(t *testing.T) {
-	privKey, pubKey, err := crypto.GenerateKeyPair()
+	privKey, pubKey, err := crypto11.GenerateKeyPair()
 	if err != nil {
 		t.Fatalf("Error generating key pair: %v", err)
 	}
@@ -30,7 +30,7 @@ func TestSignAndVerify(t *testing.T) {
 	//fmt.Println(message)
 
 	// 签名
-	signature, err := crypto.Sign(privKey, message)
+	signature, err := crypto11.Sign(privKey, message)
 	if err != nil {
 		t.Fatalf("Error signing message: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestSignAndVerify(t *testing.T) {
 	fmt.Println("Sign pass!")
 
 	// 确认签名是否有效
-	valid, err := crypto.Verify(pubKey, message, signature)
+	valid, err := crypto11.Verify(pubKey, message, signature)
 	if err != nil {
 		t.Fatalf("Error verifying signature: %v", err)
 	}
@@ -47,16 +47,16 @@ func TestSignAndVerify(t *testing.T) {
 	}
 
 	//下面进行测试签名无效的情况
-	privKey1, _, err1 := crypto.GenerateKeyPair()
+	privKey1, _, err1 := crypto11.GenerateKeyPair()
 
 	message1 := []byte("This is another message")
 
-	signature1, err1 := crypto.Sign(privKey1, message1)
+	signature1, err1 := crypto11.Sign(privKey1, message1)
 	if err1 != nil {
 		t.Fatalf("Error signing message: %v", err)
 	}
 	//用第一个用户的公钥来验证是否正确，显然输出应该为不正确则测试成功
-	valid1, err1 := crypto.Verify(pubKey, message, signature1)
+	valid1, err1 := crypto11.Verify(pubKey, message, signature1)
 	if err1 != nil {
 		t.Fatalf("Error verifying signature: %v", err)
 	}
