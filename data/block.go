@@ -43,7 +43,7 @@ func (b *Block) CalculateHash() string {
 //处理区块内的交易
 
 // PackTransactions 将待处理池中的交易打包成区块
-func (b *Block) PackTransactions(transactionPool []*Transaction) []*Transaction {
+func (b *Block) PackTransactions(transactionPool []*Transaction) ([]*Transaction, *Block) {
 	const maxTransactionsPerBlock = 10
 	const maxFeeThreshold = 5.0
 
