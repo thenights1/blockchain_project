@@ -56,7 +56,7 @@ func (n *Node) Start() {
 			return
 		default:
 			// 模拟节点的周期性活动
-			n.periodicActivity()
+
 		}
 	}
 }
