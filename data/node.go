@@ -17,11 +17,11 @@ type Node struct {
 	Blockchain      *Blockchain       //表示节点拥有的区块链
 	PublicKey       *ecdsa.PublicKey  //存储公钥
 	PrivateKey      *ecdsa.PrivateKey //存储私钥
-	Consensus       *PBFT             //表示节点使用的共识机制，这里是PBFT。
-	mutex           sync.Mutex        //用于在多协程中保护数据一致性的互斥锁
-	Synchronized    bool              //用于判断节点是否与其他节点同步
-	stopChan        chan struct{}     //用于通知节点停止的通道
-	Addr            string
+	//Consensus       *PBFT             //表示节点使用的共识机制，这里是PBFT。
+	mutex        sync.Mutex    //用于在多协程中保护数据一致性的互斥锁
+	Synchronized bool          //用于判断节点是否与其他节点同步
+	stopChan     chan struct{} //用于通知节点停止的通道
+	Addr         string
 }
 
 // NewNode 创建一个新的节点实例
@@ -35,7 +35,6 @@ func NewNode(addr string, id string) *Node {
 		ID:              id,
 		TransactionPool: make([]Transaction, 0),
 		Blockchain:      NewBlockchain(),
-		Consensus:       NewPBFT(),
 		stopChan:        make(chan struct{}),
 		Synchronized:    false,
 		Addr:            addr,
@@ -49,16 +48,22 @@ func NewNode(addr string, id string) *Node {
 // Start 启动节点
 func (n *Node) Start() {
 	fmt.Printf("Node %s started\n", n.ID)
-	for {
-		select {
-		case <-n.stopChan:
-			fmt.Printf("Node %s stopped\n", n.ID)
-			return
-		default:
-			// 模拟节点的周期性活动
-
-		}
-	}
+	//flag := 0
+	//for {
+	//	select {
+	//	case <-n.stopChan:
+	//		fmt.Printf("Node %s stopped\n", n.ID)
+	//		return
+	//	default:
+	//		if flag != 1 {
+	//
+	//			flag = 1
+	//		}
+	//		// 模拟节点的周期性活动
+	//
+	//	}
+	//}
+	n.tcpListen()
 }
 
 // Stop 停止节点
@@ -83,7 +88,7 @@ func (n *Node) SubmitBlockForConsensus() {
 	defer n.mutex.Unlock()
 
 	fmt.Printf("Node %s submitted block for consensus\n", n.ID)
-	n.Consensus.StartConsensus()
+	//n.Consensus.StartConsensus()
 }
 
 // GetTransactionInfo 获取特定交易的信息

@@ -1,4 +1,4 @@
-package blockchain
+package main
 
 import (
 	"blockchain/data"
@@ -7,8 +7,9 @@ import (
 
 func main() {
 	// 初始化节点
-	nodeA := data.NewNode("NodeA")
-	nodeB := data.NewNode("NodeB")
+
+	nodeA := data.NewNode("127.0.0.1:9001", "NodeA")
+	nodeB := data.NewNode("127.0.0.1:9002", "NodeB")
 	// ...
 
 	// 启动节点
@@ -17,13 +18,13 @@ func main() {
 	// ...
 
 	// 初始化共识
-	pbft := data.NewPBFT(nodeA, nodeB /* add other nodes */)
+	//pbft := data.NewPBFT(nodeA, nodeB /* add other nodes */)
 
 	// 启动共识
-	pbft.StartConsensus()
+	//pbft.StartConsensus()
 
 	// 添加交易到待处理池
-	nodeA.AddTransaction("Transaction1")
+	//nodeA.AddTransaction("Transaction1")
 	// ...
 
 	// 提交区块到共识过程

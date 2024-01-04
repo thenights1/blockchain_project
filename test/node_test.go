@@ -16,6 +16,20 @@ func TestCreate(t *testing.T) {
 	//t.Fatalf("aaa")
 }
 
+func TestSendmessage(t *testing.T) {
+	node1addr := "127.0.0.1:8898"
+	id1 := "NO.1"
+	node := data.NewNode(node1addr, id1)
+	go node.Start()
+	node2addr := "127.0.0.1:8088"
+	id2 := "NO.2"
+	node2 := data.NewNode(node2addr, id2)
+	go node2.Start()
+	message := []byte("test message, llllll")
+	go node.Sendmessage(message, node2.Addr)
+
+}
+
 //func TestNodeActivity(t *testing.T) {
 //	// 创建一个新节点
 //	nodeaddr := 8888

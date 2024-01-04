@@ -9,6 +9,27 @@ import (
 	"net"
 )
 
+func ClientTcpListen(clientAddr string) {
+	listen, err := net.Listen("tcp", clientAddr)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer listen.Close()
+
+	for {
+		conn, err := listen.Accept()
+		if err != nil {
+			log.Panic(err)
+		}
+		b, err := io.ReadAll(conn)
+		if err != nil {
+			log.Panic(err)
+		}
+		fmt.Println(string(b))
+	}
+
+}
+
 // 节点使用的tcp监听
 func (p *Node) tcpListen() {
 	listen, err := net.Listen("tcp", p.Addr)
@@ -28,13 +49,13 @@ func (p *Node) tcpListen() {
 			log.Panic(err)
 		}
 		//p.handleRequest(b)
-		fmt.Println(b)
+		fmt.Println(string(b))
 	}
 
 }
 
 // 使用tcp发送消息
-func Sendmessage(context []byte, addr string) {
+func (p *Node) Sendmessage(context []byte, addr string) {
 	//准备连接端口
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {

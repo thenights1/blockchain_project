@@ -10,11 +10,11 @@ import (
 
 func TestRpctest(t *testing.T) {
 	// 创建两个节点
-	node1 := data.NewNode("Node1", "localhost:9001")
-	node2 := data.NewNode("Node2", "localhost:9002")
+	node1 := data.NewNode("127.0.0.1:9001", "Node1")
+	node2 := data.NewNode("127.0.0.1:9002", "Node2")
 
 	// 创建 PBFT 共识实例
-	pbft := data.NewPBFT(node1, node2)
+	//pbft := data.NewPBFT(node1, node2)
 
 	// 启动节点
 	go node1.Start()
@@ -24,10 +24,10 @@ func TestRpctest(t *testing.T) {
 	time.Sleep(time.Second)
 
 	// 启动 PBFT 共识
-	pbft.StartConsensus()
+	//pbft.StartConsensus()
 
 	// 等待共识完成
-	time.Sleep(3 * time.Second)
+	//time.Sleep(3 * time.Second)
 
 	// 向节点发送消息
 	var wg sync.WaitGroup
@@ -38,7 +38,7 @@ func TestRpctest(t *testing.T) {
 		context := []byte("Hello from Node1")
 		addr := "localhost:9002"
 		fmt.Printf("[%s] Sending message to %s\n", node1.ID, addr)
-		data.Sendmessage(context, addr)
+		node1.Sendmessage(context, addr)
 	}()
 
 	go func() {
@@ -46,7 +46,7 @@ func TestRpctest(t *testing.T) {
 		context := []byte("Hello from Node2")
 		addr := "localhost:9001"
 		fmt.Printf("[%s] Sending message to %s\n", node2.ID, addr)
-		data.Sendmessage(context, addr)
+		node2.Sendmessage(context, addr)
 	}()
 
 	wg.Wait()
