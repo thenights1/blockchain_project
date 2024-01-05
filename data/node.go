@@ -6,7 +6,10 @@ import (
 	"blockchain/crypto11"
 	"crypto/ecdsa"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -14,16 +17,18 @@ import (
 // Node 节点的数据结构
 type Node struct {
 	ID              string            //node的唯一标识符
-	TransactionPool []Transaction     //存储待处理交易的池。
+	TransactionPool []*Transaction    //存储待处理交易的池。
 	Blockchain      *Blockchain       //表示节点拥有的区块链
 	PublicKey       *ecdsa.PublicKey  //存储公钥
 	PrivateKey      *ecdsa.PrivateKey //存储私钥
-	//Consensus       *PBFT             //表示节点使用的共识机制，这里是PBFT。
-	mutex        sync.Mutex    //用于在多协程中保护数据一致性的互斥锁
-	Synchronized bool          //用于判断节点是否与其他节点同步
-	stopChan     chan struct{} //用于通知节点停止的通道
-	Addr         string
-	view         int
+	Consensus       *PBFT             //共识算法，这里是pbft
+	tempBlocks      []*Block          //临时区块池，存储打包好还未提交到共识算法的区块
+	ifcommit        bool              //用来判断是否需要提交区块
+	mutex           sync.Mutex        //用于在多协程中保护数据一致性的互斥锁
+	Synchronized    bool              //用于判断节点是否与其他节点同步
+	stopChan        chan struct{}     //用于通知节点停止的通道
+	Addr            string
+	View            int
 }
 
 // NewNode 创建一个新的节点实例
@@ -35,15 +40,15 @@ func NewNode(addr string, id string) *Node {
 	}
 	node := &Node{
 		ID:              id,
-		TransactionPool: make([]Transaction, 0),
+		TransactionPool: make([]*Transaction, 0),
 		Blockchain:      NewBlockchain(),
 		stopChan:        make(chan struct{}),
 		Synchronized:    false,
 		Addr:            addr,
 		PrivateKey:      privateKey,
 		PublicKey:       publicKey,
+		ifcommit:        false,
 	}
-
 	return node
 }
 
@@ -62,8 +67,27 @@ func (n *Node) Start() {
 				flag = 1
 			}
 			// 模拟节点的周期性活动
-			//time.Sleep(3*time.Second)
-			//n.PackTransactions(*TransactionPool)
+			time.Sleep(3 * time.Second)
+			var newblock *Block
+
+			n.TransactionPool, newblock = n.PackTransactions(n.TransactionPool)
+			if newblock != nil {
+				n.tempBlocks = append(n.tempBlocks, newblock) //加入临时区块池，之后提交
+			}
+			go func() {
+				n.mutex.Lock()
+				var block *Block
+				if len(n.tempBlocks) > 0 {
+					block = n.tempBlocks[0]
+					n.tempBlocks = n.tempBlocks[1:] //切去第一个元素，因为即将被提交到pbft
+					n.Consensus.PrePrepare(block)
+				}
+				n.mutex.Unlock()
+				if n.ifcommit == true {
+
+				}
+			}()
+
 		}
 	}
 	//n.tcpListen()
@@ -76,32 +100,103 @@ func (n *Node) Stop() {
 
 func (n *Node) HandleRequest(request string) {
 	flag := request[:4]
-	if flag == "tran" {
+	remainingString := request[4:]
+	if flag == "tran" { //处理提交交易请求
+		if n.View != 3 {
+			return
+		}
 		transaction_temp := &Transaction{}
-		err := transaction_temp.FromJSON(request)
+		err := transaction_temp.FromJSON(remainingString)
 		if err != nil {
 			fmt.Println("Error restoring transaction from JSON in node.go: %v", err)
 		}
-		n.AddTransaction(*transaction_temp)
+		loadedUser := NewClient("d", transaction_temp.SenderAddress, 10.0, nil, nil)
+		err = LoadKeysFromFile(loadedUser)
+		if err != nil {
+			fmt.Println("Error loading keys in node.go", err)
+		}
+		f := transaction_temp.VerifySignature(loadedUser.PublicKey)
+		if !f {
+			fmt.Printf("收到交易ID：%s,且验证有效，即将加入待处理池\n", transaction_temp.ID)
+			n.AddTransaction(transaction_temp)
+		} else {
+			fmt.Println("发现违法交易")
+		}
+	} else if flag == "preM" { //处理提交预准备请求
+		nodeid := remainingString[:5]
+		remainingString := remainingString[4:]
+		fmt.Printf("收到来自主节点 %s 的预准备请求\n", nodeid)
+		nodex := NewNode(NodeTable[nodeid], nodeid)
+		nodex.PrivateKey = nil
+		nodex.PublicKey = nil
+		NodeLoadKeysFromFile(nodex)
+		result := strings.SplitN(remainingString, " ", 2)
+		//fmt.Println(nodex.PublicKey)
+		f, _ := crypto11.Verify(nodex.PublicKey, []byte(result[1]), result[0])
+		if !f {
+			fmt.Println("预准备信息验证通过，将向其他结点广播准备信息")
+			n.Consensus.broadcast("prep" + "Come on !")
+		} else {
+			fmt.Println("预准备信息验证失败！")
+		}
+		//println(remainingString)
+	} else if flag == "prep" {
+		if n.View == 3 { //只需要主节点做出反馈
+			if remainingString == "Come on !" {
+				n.Consensus.mutex.Lock()
+				n.Consensus.prePrepareConfirmCount++
+				if n.Consensus.prePrepareConfirmCount >= 3 {
+					fmt.Println("准备过程通过，进入提交阶段")
+					n.Consensus.broadcast("comi" + "Final !")
+					n.Consensus.prePrepareConfirmCount = 1
+				}
+				n.Consensus.mutex.Unlock()
+			}
+		}
+	} else if flag == "comi" {
+		if remainingString == "Final !" {
+			fmt.Println("决定通过提交，允许主节点继续操作")
+			n.Consensus.broadcast("fina" + "GOGOGO")
+		}
+	} else if flag == "fina" {
+		if n.View == 3 {
+			if remainingString == "GOGOGO" {
+				n.Consensus.mutex.Lock()
+				n.Consensus.commitConfirmCount++
+				if n.Consensus.commitConfirmCount >= 3 {
+					fmt.Println("即将提交区块")
+					n.Consensus.commitConfirmCount = 1
+					n.ifcommit = true
+				}
+				n.Consensus.mutex.Unlock()
+			}
+		}
 	}
 
 }
 
 // AddTransaction 添加新交易到待处理池
-func (n *Node) AddTransaction(transaction Transaction) {
+func (n *Node) AddTransaction(transaction *Transaction) {
 	// 使用互斥锁，确保在多线程环境下的安全并发操作
 	n.mutex.Lock()
 	// 函数结束后解锁
 	defer n.mutex.Unlock()
 
-	fmt.Printf("Node %s added transaction: %s\n", n.ID, transaction)
+	fmt.Printf("Node %s 添加了交易，ID为: %s\n", n.ID, transaction.ID)
 	n.TransactionPool = append(n.TransactionPool, transaction)
 }
 
 // PackTransactions 将待处理池中的交易打包成区块
 func (n *Node) PackTransactions(transactionPool []*Transaction) ([]*Transaction, *Block) {
-	const maxTransactionsPerBlock = 3
-	const maxFeeThreshold = 1.0
+
+	const maxTransactionsPerBlock = 4
+	const maxFeeThreshold = 2.0
+	n.mutex.Lock() //上锁
+	defer n.mutex.Unlock()
+	if len(transactionPool) == 0 {
+		return transactionPool, nil
+	}
+	fmt.Println("开始打包区块")
 
 	// 按手续费大小排序
 	SortTransactionsByFee(transactionPool)
@@ -122,9 +217,7 @@ func (n *Node) PackTransactions(transactionPool []*Transaction) ([]*Transaction,
 	}
 
 	// 从待处理池中移除已选中的交易
-	n.mutex.Lock()
 	remainingTransactions := RemoveSelectedTransactions(transactionPool, selectedTransactions)
-	n.mutex.Unlock()
 
 	// 打包交易成区块
 	blockNumber := 0 //暂时变为0，确定加入区块链后再计算值
@@ -210,4 +303,75 @@ func (n *Node) SyncNodes() {
 func (n *Node) periodicActivity() {
 	// 模拟节点的周期性活动，例如清理过期交易、定期提交区块等
 	time.Sleep(time.Second)
+}
+
+// 存储和读取密钥，和客户端代码基本一致
+func NodeSaveKeysToFile(n *Node) error {
+	// 创建存储目录
+	err := os.MkdirAll("./nodekeys", os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	// 将私钥序列化为字符串
+	privateKeyStr, err := serializeECDSAPrivateKey(n.PrivateKey)
+	if err != nil {
+		return err
+	}
+
+	// 将公钥序列化为字符串
+	publicKeyStr, err := serializeECDSAPublicKey(n.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	// 写入私钥到文件
+	privateKeyFilePath := filepath.Join("./nodekeys", fmt.Sprintf("%s_private_key.txt", n.ID))
+	err = os.WriteFile(privateKeyFilePath, []byte(privateKeyStr), 0644)
+	if err != nil {
+		return err
+	}
+
+	// 写入公钥到文件
+	publicKeyFilePath := filepath.Join("./nodekeys", fmt.Sprintf("%s_public_key.txt", n.ID))
+	err = os.WriteFile(publicKeyFilePath, []byte(publicKeyStr), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// LoadKeysFromFile 从文件中读取字符串并转换为结点的公私钥
+func NodeLoadKeysFromFile(n *Node) error {
+	// 读取私钥文件
+	privateKeyFilePath := filepath.Join("./nodekeys", fmt.Sprintf("%s_private_key.txt", n.ID))
+	privateKeyStr, err := os.ReadFile(privateKeyFilePath)
+	if err != nil {
+		return err
+	}
+
+	// 读取公钥文件
+	publicKeyFilePath := filepath.Join("./nodekeys", fmt.Sprintf("%s_public_key.txt", n.ID))
+	publicKeyStr, err := os.ReadFile(publicKeyFilePath)
+	if err != nil {
+		return err
+	}
+
+	// 反序列化私钥和公钥
+	deserializedPrivateKey, err := deserializeECDSAPrivateKey(string(privateKeyStr))
+	if err != nil {
+		return err
+	}
+
+	deserializedPublicKey, err := deserializeECDSAPublicKey(string(publicKeyStr))
+	if err != nil {
+		return err
+	}
+
+	// 将反序列化的私钥和公钥设置到结点
+	n.PrivateKey = deserializedPrivateKey
+	n.PublicKey = deserializedPublicKey
+
+	return nil
 }

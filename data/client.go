@@ -50,9 +50,9 @@ func (c *Client) StartClient() {
 		}
 		for id, addr := range NodeTable { //给每个结点都发信息，但只有主节点会进行处理
 			Sendmessage([]byte("tran"+transactionJSON), addr)
-			fmt.Printf("客户端%s发送了信息给结点%s", c.ID, id)
+			fmt.Printf("客户端%s发送了信息给结点%s\n", c.ID, id)
 		}
-		//Sendmessage([]byte(transactionJSON), NodeTable["Node0"])
+		//Sendmessage([]byte("tran"+transactionJSON), NodeTable["Node1"])
 		// 向节点提交交易
 		//node.AddTransaction(transactionJSON)
 
@@ -91,20 +91,20 @@ func RunClients() {
 	if err != nil {
 		fmt.Println("Error generating key pair in client.go")
 	}
-	pri3, pub3, err := crypto11.GenerateKeyPair()
-	if err != nil {
-		fmt.Println("Error generating key pair in client.go")
-	}
-	pri4, pub4, err := crypto11.GenerateKeyPair()
-	if err != nil {
-		fmt.Println("Error generating key pair in client.go")
-	}
+	//pri3, pub3, err := crypto11.GenerateKeyPair()
+	//if err != nil {
+	//	fmt.Println("Error generating key pair in client.go")
+	//}
+	//pri4, pub4, err := crypto11.GenerateKeyPair()
+	//if err != nil {
+	//	fmt.Println("Error generating key pair in client.go")
+	//}
 	//分界线-----------------------------
 	Users = []*Client{
 		NewClient("User1", "0x145287", 100.0, pri1, pub1),
 		NewClient("User2", "0x124563", 150.0, pri2, pub2),
-		NewClient("User3", "0x145235", 200.0, pri3, pub3),
-		NewClient("User4", "0x147889", 120.0, pri4, pub4),
+		//NewClient("User3", "0x145235", 200.0, pri3, pub3),
+		//NewClient("User4", "0x147889", 120.0, pri4, pub4),
 	}
 	for _, user := range Users { //利用文件存储持久化密钥
 		err := SaveKeysToFile(user)

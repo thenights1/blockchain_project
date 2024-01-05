@@ -2,6 +2,7 @@ package main
 
 import (
 	"blockchain/data"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -25,6 +26,14 @@ func main() {
 		"Node2": "127.0.0.1:9002",
 		"Node3": "127.0.0.1:9003",
 	}
+	No_usenode := data.NewNode("ddd", "ddd") //虚假结点，用来当做创世区块的提出者
+	blockchain := data.NewBlockchain(No_usenode)
+	//data.ClientTable = map[string]string{
+	//	"User1": "0x145287",
+	//	"User2": "0x124563",
+	//	"User3": "0x145235",
+	//	"User4": "0x147889",
+	//}
 
 	// 创建 PBFT 共识实例
 	//pbft := data.NewPBFT(node1, node2)
@@ -40,6 +49,17 @@ func main() {
 		data.ClientTcpListen("127.0.0.1:8001")
 	} else if addr, ok := data.NodeTable[nodeID]; ok {
 		node := data.NewNode(addr, nodeID)
+		if node.ID == "Node0" {
+			node.Consensus = data.NewPBFT(node, true)
+			node.View = 3
+		} else {
+			node.Consensus = data.NewPBFT(node, false)
+			node.View = 0
+		}
+		err := data.NodeSaveKeysToFile(node)
+		if err != nil {
+			fmt.Println("Error saving keys for node %s: %v", node.ID, err)
+		}
 		go node.Start()
 	}
 	//if nodeID == "Node1" {

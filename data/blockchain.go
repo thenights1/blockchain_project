@@ -16,11 +16,9 @@ type Blockchain struct {
 }
 
 // NewBlockchain 创建一个新的区块链实例
-func NewBlockchain() *Blockchain {
-	genesisBlock := &Block{
-		BlockNumber: 0,
-		Proposer:    nil,
-	}
+func NewBlockchain(n *Node) *Blockchain {
+	genesisBlock := NewBlock(0, make([]*Transaction, 0), "first", n)
+	genesisBlock.Hash = genesisBlock.CalculateHash()
 	return &Blockchain{
 		chain:  []*Block{genesisBlock},
 		mutex:  sync.RWMutex{},
@@ -29,15 +27,12 @@ func NewBlockchain() *Blockchain {
 }
 
 // AddBlock 将新区块添加到区块链
-func (bc *Blockchain) AddBlock(data string, proposer *Node) {
+func (bc *Blockchain) AddBlock(block *Block, proposer *Node) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
-
-	block := &Block{
-		BlockNumber: bc.height,
-		Proposer:    proposer,
-	}
-
+	block.PrevHash = bc.chain[len(bc.chain)-1].Hash
+	block.Hash = block.CalculateHash()
+	block.Proposer = proposer
 	bc.chain = append(bc.chain, block)
 	bc.height++
 }

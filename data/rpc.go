@@ -40,7 +40,7 @@ func (p *Node) tcpListen() {
 			log.Panic(err)
 		}
 		p.HandleRequest(string(b))
-		fmt.Printf("收到信息：%s\n", string(b))
+
 	}
 
 }
@@ -58,5 +58,6 @@ func Sendmessage(context []byte, addr string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	conn.Close()
 }
