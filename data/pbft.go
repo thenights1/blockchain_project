@@ -33,7 +33,7 @@ type PBFT struct {
 // NewPBFT 创建一个新的 PBFT 实例
 func NewPBFT(n *Node, ifpropser bool) *PBFT {
 	return &PBFT{
-		node:                   NewNode(n.Addr, n.ID),
+		node:                   NewNode(n.Addr, n.ID, n.Blockchain),
 		messagePool:            make(map[string]Message),
 		prePrepareConfirmCount: 1,
 		PrePareConfirmCount:    1,
