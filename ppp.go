@@ -26,7 +26,8 @@ func main() {
 		"Node2": "127.0.0.1:9002",
 		"Node3": "127.0.0.1:9003",
 	}
-	No_usenode := data.NewNode("ddd", "ddd") //虚假结点，用来当做创世区块的提出者
+	var bc *data.Blockchain
+	No_usenode := data.NewNode("ddd", "ddd", bc) //虚假结点，用来当做创世区块的提出者
 	blockchain := data.NewBlockchain(No_usenode)
 	//data.ClientTable = map[string]string{
 	//	"User1": "0x145287",
@@ -48,7 +49,7 @@ func main() {
 	if nodeID == "client" {
 		data.ClientTcpListen("127.0.0.1:8001")
 	} else if addr, ok := data.NodeTable[nodeID]; ok {
-		node := data.NewNode(addr, nodeID)
+		node := data.NewNode(addr, nodeID, blockchain)
 		if node.ID == "Node0" {
 			node.Consensus = data.NewPBFT(node, true)
 			node.View = 3

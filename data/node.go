@@ -32,7 +32,7 @@ type Node struct {
 }
 
 // NewNode 创建一个新的节点实例
-func NewNode(addr string, id string) *Node {
+func NewNode(addr string, id string, bc *Blockchain) *Node {
 
 	privateKey, publicKey, err := crypto11.GenerateKeyPair()
 	if err != nil {
@@ -41,7 +41,7 @@ func NewNode(addr string, id string) *Node {
 	node := &Node{
 		ID:              id,
 		TransactionPool: make([]*Transaction, 0),
-		Blockchain:      NewBlockchain(),
+		Blockchain:      bc,
 		stopChan:        make(chan struct{}),
 		Synchronized:    false,
 		Addr:            addr,
@@ -126,7 +126,7 @@ func (n *Node) HandleRequest(request string) {
 		nodeid := remainingString[:5]
 		remainingString := remainingString[4:]
 		fmt.Printf("收到来自主节点 %s 的预准备请求\n", nodeid)
-		nodex := NewNode(NodeTable[nodeid], nodeid)
+		nodex := NewNode(NodeTable[nodeid], nodeid, n.Blockchain) //这里newnode增加到区块链可以忽略，主要是想提取到密钥
 		nodex.PrivateKey = nil
 		nodex.PublicKey = nil
 		NodeLoadKeysFromFile(nodex)
