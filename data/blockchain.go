@@ -3,6 +3,8 @@
 package data
 
 import (
+	"encoding/json"
+	"os"
 	"sync"
 )
 
@@ -54,4 +56,19 @@ func (bc *Blockchain) GetBlockchainHeight() int {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()
 	return bc.height
+}
+
+func (bc *Blockchain) SaveBlockchainToJSON(filePath string) error {
+	// 将区块链转换为JSON格式
+	jsonData, err := json.Marshal(bc.chain)
+	if err != nil {
+		return err
+	}
+
+	// 将JSON数据写入文件
+	err = os.WriteFile(filePath, jsonData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -23,7 +23,7 @@ type Node struct {
 	PrivateKey      *ecdsa.PrivateKey //存储私钥
 	Consensus       *PBFT             //共识算法，这里是pbft
 	tempBlocks      []*Block          //临时区块池，存储打包好还未提交到共识算法的区块
-	ifcommit        bool              //用来判断是否需要提交区块
+	tempblock       *Block            //临时块，便于快速加入区块链
 	mutex           sync.Mutex        //用于在多协程中保护数据一致性的互斥锁
 	Synchronized    bool              //用于判断节点是否与其他节点同步
 	stopChan        chan struct{}     //用于通知节点停止的通道
@@ -47,7 +47,6 @@ func NewNode(addr string, id string, bc *Blockchain) *Node {
 		Addr:            addr,
 		PrivateKey:      privateKey,
 		PublicKey:       publicKey,
-		ifcommit:        false,
 	}
 	return node
 }
@@ -67,7 +66,7 @@ func (n *Node) Start() {
 				flag = 1
 			}
 			// 模拟节点的周期性活动
-			time.Sleep(3 * time.Second)
+			time.Sleep(time.Second)
 			var newblock *Block
 
 			n.TransactionPool, newblock = n.PackTransactions(n.TransactionPool)
@@ -80,12 +79,10 @@ func (n *Node) Start() {
 				if len(n.tempBlocks) > 0 {
 					block = n.tempBlocks[0]
 					n.tempBlocks = n.tempBlocks[1:] //切去第一个元素，因为即将被提交到pbft
+					n.tempblock = block
 					n.Consensus.PrePrepare(block)
 				}
 				n.mutex.Unlock()
-				if n.ifcommit == true {
-
-				}
 			}()
 
 		}
@@ -166,7 +163,11 @@ func (n *Node) HandleRequest(request string) {
 				if n.Consensus.commitConfirmCount >= 3 {
 					fmt.Println("即将提交区块")
 					n.Consensus.commitConfirmCount = 1
-					n.ifcommit = true
+					n.Blockchain.AddBlock(n.tempblock, n)
+					time.Sleep(time.Second)
+					fmt.Println("成功增加到区块链")
+					n.Blockchain.SaveBlockchainToJSON("./blockchain.json")
+
 				}
 				n.Consensus.mutex.Unlock()
 			}
@@ -261,22 +262,10 @@ func contains(transactions []*Transaction, target *Transaction) bool {
 	return false
 }
 
-// SubmitBlockForConsensus 提交区块到共识过程
-func (n *Node) SubmitBlockForConsensus() {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
-
-	fmt.Printf("Node %s submitted block for consensus\n", n.ID)
-	//n.Consensus.StartConsensus()
-}
-
 // GetTransactionInfo 获取特定交易的信息
 func (n *Node) GetTransactionInfo(transaction string) string {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
-
-	fmt.Printf("Node %s retrieved transaction info for: %s\n", n.ID, transaction)
-	// 实际情况中，你可能会根据交易 ID 从数据库或区块链中检索相关信息
 	return fmt.Sprintf("Transaction Info for %s from Node %s", transaction, n.ID)
 }
 
@@ -284,25 +273,7 @@ func (n *Node) GetTransactionInfo(transaction string) string {
 func (n *Node) GetBlockInfo(blockNumber int) string {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
-
-	fmt.Printf("Node %s retrieved block info for block %d\n", n.ID, blockNumber)
-	// 实际情况中，你可能会根据区块编号从数据库或区块链中检索相关信息
 	return fmt.Sprintf("Block Info for Block %d from Node %s", blockNumber, n.ID)
-}
-
-// SyncNodes 执行节点之间的同步操作
-func (n *Node) SyncNodes() {
-	n.mutex.Lock()
-	defer n.mutex.Unlock()
-
-	fmt.Printf("Node %s syncing nodes\n", n.ID)
-	// 实际情况中，你可能会与其他节点进行数据同步操作
-}
-
-// periodicActivity 模拟节点的周期性活动
-func (n *Node) periodicActivity() {
-	// 模拟节点的周期性活动，例如清理过期交易、定期提交区块等
-	time.Sleep(time.Second)
 }
 
 // 存储和读取密钥，和客户端代码基本一致

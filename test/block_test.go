@@ -48,19 +48,3 @@ func TestNewBlock(t *testing.T) {
 		t.Errorf("Block hash mismatch. Expected %s, got %s", expectedHash, block.Hash)
 	}
 }
-func TestAddTrac(t *testing.T) { //测试添加交易到交易池
-	//nodeaddr := "localhost:8888"
-	//id := "NO.1"
-	////node := data.NewNode(nodeaddr, id)
-	//
-	//sender := "0x145789324"
-	//receiver := "0x145552314"
-	//amount := 10.0
-	//premium := 100.00
-	//
-	//transaction1, err := data.NewTransaction(sender, receiver, amount, premium, privateKey)
-	//
-	//if err != nil {
-	//	t.Fatalf("Error creating new transaction: %v", err)
-	//}
-}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"time"
 )
 
 type Message struct {
@@ -85,6 +86,7 @@ func (pbft *PBFT) PrePrepare(block *Block) {
 // broadcast 向其他节点广播消息
 func (pbft *PBFT) broadcast(message string) {
 	fmt.Printf("Node %s broadcasts message\n", pbft.node.ID)
+	time.Sleep(time.Second)
 	for id, addr := range NodeTable {
 		if id == pbft.node.ID {
 			continue

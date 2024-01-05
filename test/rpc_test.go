@@ -10,8 +10,9 @@ import (
 
 func TestRpctest(t *testing.T) {
 	// 创建两个节点
-	node1 := data.NewNode("127.0.0.1:9001", "Node1")
-	node2 := data.NewNode("127.0.0.1:9002", "Node2")
+	var bc *data.Blockchain
+	node1 := data.NewNode("127.0.0.1:9001", "Node1", bc)
+	node2 := data.NewNode("127.0.0.1:9002", "Node2", bc)
 
 	// 创建 PBFT 共识实例
 	//pbft := data.NewPBFT(node1, node2)
