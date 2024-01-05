@@ -58,6 +58,5 @@ func (bc *Blockchain) GetBlockInfo(blockNumber int) *Block {
 func (bc *Blockchain) GetBlockchainHeight() int {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()
-
 	return bc.height
 }

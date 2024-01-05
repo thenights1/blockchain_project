@@ -38,7 +38,7 @@ func TestRpctest(t *testing.T) {
 		context := []byte("Hello from Node1")
 		addr := "localhost:9002"
 		fmt.Printf("[%s] Sending message to %s\n", node1.ID, addr)
-		node1.Sendmessage(context, addr)
+		data.Sendmessage(context, addr)
 	}()
 
 	go func() {
@@ -46,7 +46,7 @@ func TestRpctest(t *testing.T) {
 		context := []byte("Hello from Node2")
 		addr := "localhost:9001"
 		fmt.Printf("[%s] Sending message to %s\n", node2.ID, addr)
-		node2.Sendmessage(context, addr)
+		data.Sendmessage(context, addr)
 	}()
 
 	wg.Wait()

@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -86,20 +87,20 @@ func (t *Transaction) VerifySignature(publicKey *ecdsa.PublicKey) bool {
 	return valid
 }
 
-//// ToJSON 将交易转换为JSON格式的字符串
-//func (t *Transaction) ToJSON() (string, error) {
-//	jsonData, err := json.Marshal(t)
-//	if err != nil {
-//		return "", err
-//	}
-//	return string(jsonData), nil
-//}
-//
-//// FromJSON 从JSON格式的字符串恢复交易
-//func (t *Transaction) FromJSON(jsonData string) error {
-//	err := json.Unmarshal([]byte(jsonData), &t)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
+// ToJSON 将交易转换为JSON格式的字符串
+func (t *Transaction) ToJSON() (string, error) {
+	jsonData, err := json.Marshal(t)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
+}
+
+// FromJSON 从JSON格式的字符串恢复交易
+func (t *Transaction) FromJSON(jsonData string) error {
+	err := json.Unmarshal([]byte(jsonData), &t)
+	if err != nil {
+		return err
+	}
+	return nil
+}

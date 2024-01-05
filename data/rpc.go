@@ -14,19 +14,10 @@ func ClientTcpListen(clientAddr string) {
 	if err != nil {
 		log.Panic(err)
 	}
+	fmt.Printf("客户端开启监听，地址：%s\n", clientAddr)
 	defer listen.Close()
 
-	for {
-		conn, err := listen.Accept()
-		if err != nil {
-			log.Panic(err)
-		}
-		b, err := io.ReadAll(conn)
-		if err != nil {
-			log.Panic(err)
-		}
-		fmt.Println(string(b))
-	}
+	RunClients()
 
 }
 
@@ -48,14 +39,14 @@ func (p *Node) tcpListen() {
 		if err != nil {
 			log.Panic(err)
 		}
-		//p.handleRequest(b)
-		fmt.Println(string(b))
+		p.HandleRequest(string(b))
+		fmt.Printf("收到信息：%s\n", string(b))
 	}
 
 }
 
 // 使用tcp发送消息
-func (p *Node) Sendmessage(context []byte, addr string) {
+func Sendmessage(context []byte, addr string) {
 	//准备连接端口
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
